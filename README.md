@@ -29,7 +29,7 @@ I think this section should also talk about the sensor integration and the wirel
 ### Hardware
 Hardware Diagram of the System
 
-<img width="498" height="370" alt="image" src="https://github.com/user-attachments/assets/b02d4fd4-7635-4733-8c7c-8e86d402e85c" />
+<img width="444" height="350" alt="XIAO_BLE(1)" src="https://github.com/user-attachments/assets/2843d425-ef3d-4051-8f38-68c95a714be5" />
 
 ### Software
 Top-level flow-chart of software implementation
