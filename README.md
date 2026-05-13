@@ -79,7 +79,7 @@ Game Design and Ultra Sonic
 
 #### Later. 
 ## Equipment Required
-- Camera (List exact type)
-- Speakers (List exact type)
-- Xiao seeed thing
-- Laptop
+- ESP32-CAM Development Board
+- M5 stack speaker (I2S)
+- XIAO nRF52840 Sense
+- Laptop / PC
