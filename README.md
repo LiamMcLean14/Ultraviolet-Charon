@@ -28,10 +28,15 @@ We will determine the success of the project by the following metrics:
 I think this section should also talk about the sensor integration and the wireless network communication / IOT protocols / Web dashboard. If it doesn't flow well put this stuff in its own section
 ### Hardware
 Hardware Diagram of the System
+
 <img width="498" height="370" alt="image" src="https://github.com/user-attachments/assets/b02d4fd4-7635-4733-8c7c-8e86d402e85c" />
 
 ### Software
 Top-level flow-chart of software implementation
+
+<p>
+<img width="603" height="601" alt="image" src="https://github.com/user-attachments/assets/012cb833-18a6-4cea-adfe-620f86792b57" />
+</p>
 
 I don't think this stuff should be in this section but here's some useful resources for the project:
 - Datasets: There's a bunch of different ones, just find them if we need one
