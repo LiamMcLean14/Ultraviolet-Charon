@@ -17,10 +17,10 @@ This web dashboard will also display the player's high scores.
 
 ### Key Performance indicators
 We will determine the success of the project by the following metrics:
-1. Finger detection system can correctly identify the number of fingers held up at least 90% of the time (The actual numbers are arbitrary, we can change them to whatever)
-2. The position detection system can correctly determine distance within +/- 50cm at least 90% of the time
-3. The speaker system can properly play music (I think this needs more details but I'm out of ideas)
-4. The web dashboard can display the camera feed in somewhat real time
+1. Finger detection system can correctly identify the number of fingers held up at least 90% of the time
+2. The position detection system can correctly determine distance within +/- 5cm at least 90% of the time
+3. The speaker system can properly play music notes in the right order and timing
+4. The web dashboard can display the camera feed with limitted delay
 5. The system properly tracks high scores and displays them on the web dashboard.
 6. The game systems (e.g. level select) are easy to use and work without errors.
 
