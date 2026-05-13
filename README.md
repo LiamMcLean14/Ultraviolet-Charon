@@ -27,7 +27,8 @@ We will determine the success of the project by the following metrics:
 ## System Architecture
 I think this section should also talk about the sensor integration and the wireless network communication / IOT protocols / Web dashboard. If it doesn't flow well put this stuff in its own section
 ### Hardware
-Block diagram of the system
+Hardware Diagram of the System
+<img width="998" height="790" alt="image" src="https://github.com/user-attachments/assets/b02d4fd4-7635-4733-8c7c-8e86d402e85c" />
 
 ### Software
 Top-level flow-chart of software implementation
