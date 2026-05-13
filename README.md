@@ -65,12 +65,13 @@ Maybe there's drivers for the peripherals. If so they might count as advanced li
 ## Team Member Roles
 This section will describe the roles of each team member developing the project and justify the team member's involvement. (I'm not sure what exactly 'justifying involvement' means. Maybe it's meant to be why the section(s) we worked on is necessary)
 ### Ethan Dawson
-Ethan section here
+I will primarily work on the speakers and the web app, I expect these tasks to be completed quickly so will then move onto assisting my team mates with their tasks. 
 ### Liam McLean
-Liam section here
+I will work on the camera and the AI detection, 
 ### Matthew Moore
-Matthew section here
+Game Design and Ultra Sonic 
 
+#### Later. 
 ## Equipment Required
 - Camera (List exact type)
 - Speakers (List exact type)
