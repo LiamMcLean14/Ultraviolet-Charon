@@ -1,0 +1,11 @@
+pip install opencv-python
+pip install cvzone
+pip install mediapipe==0.10.14
+(Newest version of mediapipe doesnt work with cvzone)
+
+Arduino code update wifi information
+const char *ssid = "wifiname";
+const char *password = "password";
+
+Upload through arduinoIDE and run the python code in the same network as the camera is connected to. You should see the camera feed in a window.
+I dont know how this will work with the UQ wifi
