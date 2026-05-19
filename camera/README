@@ -9,3 +9,7 @@ const char *password = "password";
 
 Upload through arduinoIDE and run the python code in the same network as the camera is connected to. You should see the camera feed in a window.
 I dont know how this will work with the UQ wifi
+
+https://randomnerdtutorials.com/esp32-cam-video-streaming-face-recognition-arduino-ide/
+https://randomnerdtutorials.com/installing-esp32-arduino-ide-2-0/
+https://www.skytup.com/blog/hand-gesture-control-using-opencv-and-cvzone-python-project-by-akash-vishwakarma-132
