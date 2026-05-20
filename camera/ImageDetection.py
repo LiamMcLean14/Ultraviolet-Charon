@@ -6,6 +6,7 @@ from cvzone.HandTrackingModule import HandDetector
 url = "http://10.160.24.114/capture"
 
 def getFingerData():
+    detector = HandDetector(detectionCon=0.8, maxHands=1)
     try:
         imgResp = urllib.request.urlopen(url)
         imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
@@ -21,13 +22,14 @@ def getFingerData():
 
         cv2.putText(img, f"Fingers: {sum(fingers)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         #cv2.imwrite("fingersMarked.jpg", img)
-        cv2.imshow("Hand Detection", img)
+        #cv2.imshow("Hand Detection", img)
 
     except Exception as e:
         print("Error: ", e)
     return fingers, img
 
 def showImage():
+    detector = HandDetector(detectionCon=0.8, maxHands=1)
     try:
         imgResp = urllib.request.urlopen(url)
         imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
@@ -37,7 +39,6 @@ def showImage():
         print("Error: ", e)
 
 if __name__ == "__main__":
-    detector = HandDetector(detectionCon=0.8, maxHands=1)
     while True:
         getFingerData()
         #showImage()
