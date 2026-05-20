@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "esp_camera.h"
 #include <WiFi.h>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 // ===========================
 // Select camera model in board_config.h
@@ -10,8 +12,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char *ssid = "wifiname";
-const char *password = "password";
+const char *ssid = "Liam's A23";
+const char *password = "qudc4114";
 
 void startCameraServer();
 void setupLedFlash();
@@ -20,6 +22,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -53,7 +56,7 @@ void setup() {
   //                      for larger pre-allocated frame buffer.
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
-      config.jpeg_quality = 10;
+      config.jpeg_quality = 24;
       config.fb_count = 2;
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
