@@ -20,17 +20,27 @@ def getFingerData():
             #print(fingers)
 
         cv2.putText(img, f"Fingers: {sum(fingers)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.imwrite("fingersMarked.jpg", img)
+        #cv2.imwrite("fingersMarked.jpg", img)
         cv2.imshow("Hand Detection", img)
 
     except Exception as e:
         print("Error: ", e)
-    return fingers
+    return fingers, img
+
+def showImage():
+    try:
+        imgResp = urllib.request.urlopen(url)
+        imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
+        img = cv2.imdecode(imgNp, -1)
+        cv2.imshow("Image", img)
+    except Exception as e:
+        print("Error: ", e)
 
 if __name__ == "__main__":
     detector = HandDetector(detectionCon=0.8, maxHands=1)
     while True:
         getFingerData()
+        #showImage()
         if cv2.waitKey(1) == 27:
             break
     cv2.destroyAllWindows()
