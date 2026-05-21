@@ -1,6 +1,7 @@
 import math
 import json
 from pathlib import Path
+from time import sleep
 
 class AudioNote:
     """
@@ -169,6 +170,9 @@ class Level:
         at each 0.5 second timespan.
         If multiple notes are present in a timespan, only the first will be represented.
         If no notes are present for a row, it will be filled by empty_row_str
+        The first rows will be at the start of the list, and last rows at the end.
+        Note that this means calling print() on the detailed view will have the first rows
+        at the top.
         """
         row_strings: list[str] = []
         index = 0
@@ -187,10 +191,26 @@ class Level:
             row_strings.append(" and ".join(notes_found) if notes_found else empty_row_str)
             time += increment
         
-        # We want the last rows at the top and the first rows at the bottom
-        row_strings.reverse()
         return row_strings
 
+def view_subsection(view: list[str], rows: int, increment: float, current_time: float) -> str:
+    if rows <= 0:
+        return ""
+    if increment <= 0:
+        raise ValueError(f"Increment must be > 0 but was {increment}")
+    starting_index = int(current_time // increment)
+    if starting_index >= len(view):
+        return "Level is finished"
+    
+    index = starting_index
+    subview_rows = []
+    while index < starting_index + rows:
+        subview_rows.append(view[index] if index < len(view) else "")
+        index += 1
+
+    # We want the next row to be printed at the bottom, so reverse the list
+    subview_rows.reverse()
+    return "\n".join(subview_rows)
 
 
 def load_level(path: str) -> Level:
@@ -230,8 +250,15 @@ def main():
     #Test loading the sample level
     sample_level = load_level("levels/sample.json")
     print(sample_level)
-    print("Level view with 0.5 second increment:")
-    print("\n".join(sample_level.detailed_level_view(0.5)))
+    level_view = sample_level.detailed_level_view(0.25)
+    current_time = 0
+    for i in range(40):
+        print(view_subsection(level_view, 10, 0.25, current_time))
+        sleep(0.25)
+        current_time += 0.25
+        # Clears the previous display for the next one
+        print("\033[10A\033[J", end="") 
+
 
 
 if __name__ == "__main__":
