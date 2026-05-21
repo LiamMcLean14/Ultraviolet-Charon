@@ -19,6 +19,9 @@ class AudioNote:
 
         # TODO value check tone
         self.hertz = hertz
+    
+    def __str__(self) -> str:
+        return f"{self.hertz} Hz at {self.time_played} seconds"
 
 
 
@@ -35,7 +38,7 @@ class GameplayNote:
     time_played: float
     finger_positions: list[int]
 
-    def __init__(self, time_played: float, finger_positions: list[bool]) -> None:
+    def __init__(self, time_played: float, finger_positions: list[int]) -> None:
         if time_played < 0:
             raise ValueError(f"Invalid time played: {time_played}. Time played must not be < 0")
         self.time_played = time_played
@@ -43,6 +46,13 @@ class GameplayNote:
         if len(finger_positions) != 5:
             raise ValueError(f"Finger positions must be a list of 5 integers for each finger")
         self.finger_positions = finger_positions
+
+    def __str__(self) -> str:
+        position_reps = []
+        for position in self.finger_positions:
+            position_reps.append("#" if position else "-")
+        position_reps.append(f" at {self.time_played} seconds")
+        return "".join(position_reps)
 
 
 
@@ -53,7 +63,7 @@ class Level:
     Attributes:
         name: The level's name
         length: The level's length, in seconds
-        difficulty: An arbitrary value representing the level's difficulty
+        difficulty: The level's difficulty out of 5. It is not checked, so can be any number.
         audio_notes: A list of Audio notes that will be played via the speaker.
                      If multiple notes have the same time_played, all but 1 will be removed.
                      If a note's time_played > the level's length, it will be removed.
@@ -62,14 +72,16 @@ class Level:
                         If a note's time_played > the level's length, it will be removed.
     """
     name: str
+    description: str
     length: float
-    difficulty: int
+    difficulty: float
     audio_notes: list[AudioNote]
     gameplay_notes: list[GameplayNote]
 
-    def __init__(self, name: str, length: float, difficulty: int,
+    def __init__(self, name: str, description: str, length: float, difficulty: float,
                     audio_notes: list[AudioNote], gameplay_notes: list[GameplayNote]) -> None:
         self.name = name
+        self.description = description
         
         if length < 0:
             raise ValueError(f"Invalid length: {length}. Length must not be < 0")
@@ -127,10 +139,27 @@ class Level:
             print(f"Warning: {notes_above_length} gameplay notes were removed for having a time_played > level length")
         if (duplicate_timings > 0):
             print(f"Warning: {duplicate_timings} gameplay notes were removed for duplicate timings")
+    
+    def __str__(self) -> str:
+        parts = []
+        
+        parts.append(f"Level Name: {self.name}")
+        parts.append(f"Description: {self.description}")
+        parts.append(f"Difficulty: {self.difficulty} / 5")
+        
+        parts.append(f"Audio Notes:")
+        for audio_note in self.audio_notes:
+            parts.append(str(audio_note))
+        
+        parts.append(f"Gameplay Notes:")
+        for gameplay_note in self.gameplay_notes:
+            parts.append(str(gameplay_note))
+        
+        return "\n".join(parts)
 
 def load_level(path: str) -> Level:
     """
-    Loads a level with the given path, relative to this file
+    Loads a level with the given path, relative to this file.
     e.g. load_level("levels/sample.json") will load levels/sample.json
     """
     # Get the directory this Python file is in
@@ -153,6 +182,7 @@ def load_level(path: str) -> Level:
 
     return Level(
         name=data["name"],
+        description=data["description"],
         length=data["length"],
         difficulty=data["difficulty"],
         audio_notes=audio_notes,

@@ -1,8 +1,8 @@
 {
     "name": "sample",
+    "description": "A sample level for testing",
     "length": 10.0,
     "difficulty": 1,
-
     "audio_notes": [
         {
             "time_played": 1.0,
