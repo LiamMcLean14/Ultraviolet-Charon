@@ -1,9 +1,25 @@
 import math
+import json
+from pathlib import Path
 
 class AudioNote:
-    """Defines an individual note played via speaker for a level"""
-    # TODO once the speaker system is ready
+    """
+    Defines an individual note played via speaker for a level
+    
+    Attributes:
+        time_played: The time that the note should be played, in seconds since the start of the level.
+        hertz: The tone a note is played (in Hz)
+    """
     time_played: float
+    hertz: int
+    def __init__(self, time_played: float, hertz: int) -> None:
+        if time_played < 0:
+            raise ValueError(f"Invalid time played: {time_played}. Time played must not be < 0")
+        self.time_played = time_played
+
+        # TODO value check tone
+        self.hertz = hertz
+
 
 
 class GameplayNote:
@@ -11,7 +27,7 @@ class GameplayNote:
     Defines an individual note the player needs to hit.
 
     Attributes:
-        time_played: The time that the note should be played, in seconds since the start of the song.
+        time_played: The time that the note should be played, in seconds since the start of the level.
         finger_positions: The finger positions needed to play the note. Represented by 5 integers,
                           With each represnting whether each finger (from left to right) should be held up.
                           1 (or any truthy value) represents it being up, 0 represents down.
@@ -111,4 +127,44 @@ class Level:
             print(f"Warning: {notes_above_length} gameplay notes were removed for having a time_played > level length")
         if (duplicate_timings > 0):
             print(f"Warning: {duplicate_timings} gameplay notes were removed for duplicate timings")
-        
+
+def load_level(path: str) -> Level:
+    """
+    Loads a level with the given path, relative to this file
+    e.g. load_level("levels/sample.json") will load levels/sample.json
+    """
+    # Get the directory this Python file is in
+    base_dir = Path(__file__).parent
+
+    # Build the path to the levels folder
+    level_path = base_dir / path
+
+    # Open the folder and parse it as JSON
+    with open(level_path, "r") as file:
+        data = json.load(file)
+
+    audio_notes = []
+    for note in data["audio_notes"]:
+        audio_notes.append(AudioNote(note["time_played"], note["hertz"]))
+
+    gameplay_notes = []
+    for note in data["gameplay_notes"]:
+        gameplay_notes.append(GameplayNote(note["time_played"], note["finger_positions"]))
+
+    return Level(
+        name=data["name"],
+        length=data["length"],
+        difficulty=data["difficulty"],
+        audio_notes=audio_notes,
+        gameplay_notes=gameplay_notes
+    )
+
+
+def main():
+    #Test loading the sample level
+    sample_level = load_level("levels/sample.json")
+    print(sample_level)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,67 @@
+{
+    "name": "sample",
+    "length": 10.0,
+    "difficulty": 1,
+
+    "audio_notes": [
+        {
+            "time_played": 1.0,
+            "hertz": 300
+        },
+        {
+            "time_played": 2.0,
+            "hertz": 400
+        },
+        {
+            "time_played": 3.0,
+            "hertz": 500
+        },
+        {
+            "time_played": 4.0,
+            "hertz": 600
+        },
+        {
+            "time_played": 5.0,
+            "hertz": 700
+        },
+        {
+            "time_played": 6.0,
+            "hertz": 800
+        },
+        {
+            "time_played": 7.0,
+            "hertz": 300
+        }
+    ],
+
+    "gameplay_notes": [
+        {
+            "time_played": 1.0,
+            "finger_positions": [1, 1, 1, 1, 1]
+        },
+        {
+            "time_played": 2.0,
+            "finger_positions": [1, 0, 0, 0, 0]
+        },
+        {
+            "time_played": 3.0,
+            "finger_positions": [0, 1, 0, 0, 0]
+        },
+        {
+            "time_played": 4.0,
+            "finger_positions": [0, 0, 1, 0, 0]
+        },
+        {
+            "time_played": 5.0,
+            "finger_positions": [0, 0, 0, 1, 0]
+        },
+        {
+            "time_played": 6.0,
+            "finger_positions": [0, 0, 0, 0, 1]
+        },
+        {
+            "time_played": 7.0,
+            "finger_positions": [1, 1, 1, 1, 1]
+        }
+    ]
+}
