@@ -37,6 +37,7 @@ class GameplayNote:
     """
     time_played: float
     finger_positions: list[int]
+    _string_rep: str
 
     def __init__(self, time_played: float, finger_positions: list[int]) -> None:
         if time_played < 0:
@@ -46,13 +47,16 @@ class GameplayNote:
         if len(finger_positions) != 5:
             raise ValueError(f"Finger positions must be a list of 5 integers for each finger")
         self.finger_positions = finger_positions
+        
+        # Calculating it here prevents having to repeatedly do this
+        position_reps = []
+        for position in finger_positions:
+            position_reps.append("#" if position else "-")
+        self._string_rep = "".join(position_reps)
 
     def __str__(self) -> str:
-        position_reps = []
-        for position in self.finger_positions:
-            position_reps.append("#" if position else "-")
-        position_reps.append(f" at {self.time_played} seconds")
-        return "".join(position_reps)
+        return self._string_rep
+        
 
 
 
@@ -153,9 +157,41 @@ class Level:
         
         parts.append(f"Gameplay Notes:")
         for gameplay_note in self.gameplay_notes:
-            parts.append(str(gameplay_note))
+            parts.append(f"{str(gameplay_note)} at {gameplay_note.time_played} seconds")
         
         return "\n".join(parts)
+    
+    def detailed_level_view(self, increment: float, empty_row_str: str="-----") -> list[str]:
+        """
+        Represents the level at the given time as rows representing the gameplay notes 
+        (if any) for each increment of time. For example, if the level length is 10 seconds, 
+        detailed_level_view(0.5) will return 20 rows representing the gameplay notes
+        at each 0.5 second timespan.
+        If multiple notes are present in a timespan, only the first will be represented.
+        If no notes are present for a row, it will be filled by empty_row_str
+        """
+        row_strings: list[str] = []
+        index = 0
+        time = 0
+
+        # Work through the list of gameplay notes.
+        while (time < self.length):
+            # If there is a note between time and time + increment,
+            # add it to the list and move through the notes list until there isn't
+            notes_found: list[str] = []
+            while index < len(self.gameplay_notes) and self.gameplay_notes[index].time_played < (time + increment):
+                notes_found.append(str(self.gameplay_notes[index]))
+                index += 1
+            
+            # This will look awkward if multiple notes are in a row, but fine otherwise
+            row_strings.append(" and ".join(notes_found) if notes_found else empty_row_str)
+            time += increment
+        
+        # We want the last rows at the top and the first rows at the bottom
+        row_strings.reverse()
+        return row_strings
+
+
 
 def load_level(path: str) -> Level:
     """
@@ -194,6 +230,8 @@ def main():
     #Test loading the sample level
     sample_level = load_level("levels/sample.json")
     print(sample_level)
+    print("Level view with 0.5 second increment:")
+    print("\n".join(sample_level.detailed_level_view(0.5)))
 
 
 if __name__ == "__main__":
