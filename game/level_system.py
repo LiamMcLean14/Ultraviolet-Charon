@@ -80,10 +80,11 @@ class Level:
     description: str
     length: float
     difficulty: float
+    speed: int
     audio_notes: list[AudioNote]
     gameplay_notes: list[GameplayNote]
 
-    def __init__(self, name: str, description: str, length: float, difficulty: float,
+    def __init__(self, name: str, description: str, length: float, difficulty: float, speed: int,
                     audio_notes: list[AudioNote], gameplay_notes: list[GameplayNote]) -> None:
         self.name = name
         self.description = description
@@ -93,6 +94,7 @@ class Level:
         self.length = length
 
         self.difficulty = difficulty
+        self.speed = speed
 
         # The notes will be sorted by their time played to play them more easily
         self.audio_notes = []
@@ -212,6 +214,19 @@ def view_subsection(view: list[str], rows: int, increment: float, current_time: 
     subview_rows.reverse()
     return "\n".join(subview_rows)
 
+def get_level_names(path: str="levels") -> list[str]:
+    """
+    Gets the name of all json files in the given folder.
+    The default path is the levels folder
+    """
+    # Get the directory this Python file is in
+    base_dir = Path(__file__).parent
+
+    # Build the path to the levels folder
+    level_path = base_dir / path
+
+    return [f.name for f in level_path.glob("*.json")]
+
 
 def load_level(path: str) -> Level:
     """
@@ -241,6 +256,7 @@ def load_level(path: str) -> Level:
         description=data["description"],
         length=data["length"],
         difficulty=data["difficulty"],
+        speed=data["speed"],
         audio_notes=audio_notes,
         gameplay_notes=gameplay_notes
     )
