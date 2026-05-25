@@ -109,7 +109,7 @@ def draw_level_select(level_files: list[str], selected_level: int):
 
     screen.blit(instructions, (WIDTH // 2 - 180, HEIGHT - 120))
 
-def draw_game_background(song_name: str):
+def draw_game_background(song_name: str, selected_lanes: list[bool]):
     screen.fill(BLACK)
     
     song_text = small_font.render(song_name, True, WHITE)
@@ -119,6 +119,12 @@ def draw_game_background(song_name: str):
     for i in range(LANE_COUNT):
         x = i * LANE_WIDTH
 
+        if selected_lanes[i]:
+            pygame.draw.rect(
+                screen,
+                (100, 100, 100),
+                (x, 0, LANE_WIDTH, HEIGHT),
+            )
         pygame.draw.rect(
             screen,
             GRAY,
@@ -167,6 +173,12 @@ def draw_results_screen(score, max_combo):
     screen.blit(combo_end, (WIDTH // 2 - 100, HEIGHT // 2))
     screen.blit(return_text, (WIDTH // 2 - 160, HEIGHT // 2 + 50))
 
+def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
+    """Determines if the correct lanes are selected to match the target lanes"""
+    for i, lane in enumerate(selected_lanes):
+        if bool(target_lanes[i]) != lane:
+            return False
+    return True
 
 # -----------------------------
 # Main loop
@@ -181,7 +193,12 @@ def main():
     level_names: list[str] = get_level_names()
     print(level_names)
     selected_level_index = 0
+    selected_lanes = [False, False, False, False, False]
     frames_elapsed = 1
+    score = 0
+    combo = 0
+    max_combo = 0
+    misses = 0
 
     # The difference in frames between when a note spawns and should be played
     spawn_play_offset = 0
@@ -208,10 +225,10 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.KEYDOWN:
+            # Level select controls
+            if state == GameState.LEVEL_SELECT:
+                if event.type == pygame.KEYDOWN:
 
-                # Level select controls
-                if state == GameState.LEVEL_SELECT:
                     if event.key == pygame.K_UP:
                         selected_level_index = (selected_level_index - 1) % len(level_names)
 
@@ -231,32 +248,41 @@ def main():
                         note_index = 0
                         misses = 0
                         max_combo = 0
+                        selected_lanes = [False, False, False, False, False]
                         spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
                         state = GameState.PLAYING
 
-                elif state == GameState.PLAYING:
-                    
-                    # TODO change this to use the hand velocity from sensors
-                    if event.key in KEYS:
-                        lane = KEYS.index(event.key)
+            elif state == GameState.PLAYING:
+                # This is currently set to track which of the keys are held, and trigger those keys
+                # When enter is pressed. TODO change this to tracking which fingers are held up, and
+                # trigger when the player moves their hand forward.
+                # This doesn't even work lol because my keyboard can't accept 6 keys pressed at once
+                if event.type == pygame.KEYDOWN:
 
+                    if event.key in KEYS:
+                        selected_lanes[KEYS.index(event.key)] = True
+
+                    elif event.key == pygame.K_RETURN:
                         hit_note = None
 
-                        # This setup means that only one note can be hit at a time.
-                        # This shouldn't matter though, just don't put notes at the exact same time
                         for note in notes:
-                            if note.note.finger_positions[lane] and note.is_hittable():
+                            if note.is_hittable():
                                 hit_note = note
                                 break
 
-                        if hit_note:
+                        if hit_note and correct_lanes(selected_lanes, note.note.finger_positions):
                             notes.remove(hit_note)
                             score += 100
                             combo += 1
                             max_combo = max(max_combo, combo)
                         else:
+                            # Button was pressed with no notes in range or with wrong lanes selected
                             combo = 0
                             misses += 1
+                
+                elif event.type == pygame.KEYUP:
+                    if event.key in KEYS:
+                        selected_lanes[KEYS.index(event.key)] = False
 
         # Game Logic
         if state == GameState.PLAYING:
@@ -284,7 +310,7 @@ def main():
         if state == GameState.LEVEL_SELECT:
             draw_level_select(level_names, selected_level_index)
         elif state in (GameState.PLAYING, GameState.RESULTS):
-            draw_game_background(level.name)
+            draw_game_background(level.name, selected_lanes)
             
             # Draw notes
             for note in notes:
