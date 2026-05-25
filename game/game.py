@@ -1,5 +1,12 @@
 import pygame
 import random
+from level_system import GameplayNote, Level, load_level, get_level_names
+from enum import Enum
+
+class GameState(Enum):
+    LEVEL_SELECT = 0
+    PLAYING = 1
+    RESULTS = 2
 
 # -----------------------------
 # Initialization
@@ -9,6 +16,8 @@ pygame.init()
 WIDTH = 600
 HEIGHT = 800
 FPS = 60
+PRE_LEVEL_SECONDS = 3
+RESULTS_SCREEN_SECONDS = 3
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Basic Rhythm Game")
@@ -27,130 +36,86 @@ GREEN = (50, 220, 100)
 RED = (220, 70, 70)
 BLUE = (80, 140, 255)
 YELLOW = (255, 220, 50)
+ORANGE = (255, 165, 20)
 
-LANE_COLORS = [RED, YELLOW, GREEN, BLUE]
+LANE_COLORS = [RED, YELLOW, GREEN, BLUE, ORANGE]
 
 # -----------------------------
 # Lanes
 # -----------------------------
-LANE_COUNT = 4
+LANE_COUNT = 5
 LANE_WIDTH = WIDTH // LANE_COUNT
 
-KEYS = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
-KEY_LABELS = ["D", "F", "J", "K"]
+KEYS = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
+KEY_LABELS = ["1", "2", "3", "4", "5"]
 
 # -----------------------------
 # Gameplay settings
 # -----------------------------
-NOTE_SPEED = 6
 NOTE_WIDTH = LANE_WIDTH - 20
 NOTE_HEIGHT = 25
 HIT_LINE_Y = HEIGHT - 120
 HIT_WINDOW = 40
 
-score = 0
-combo = 0
-max_combo = 0
-misses = 0
+class NoteObject:
+    """
+    An in-game object representing a GameplayNote on screen.
+    Contains a GameplayNote object, and info required to display it
+    (e.g. a y coordinate, and a method to draw it on-screen)
+    """
+    def __init__(self, gameplay_note: GameplayNote, starting_y, speed: int):
+        self.note = gameplay_note
+        self.y = starting_y
+        self.speed = speed
 
-# -----------------------------
-# Note class
-# -----------------------------
-class Note:
-    def __init__(self, lane, y):
-        self.lane = lane
-        self.x = lane * LANE_WIDTH + 10
-        self.y = y
-        self.hit = False
 
     def update(self):
-        self.y += NOTE_SPEED
+        self.y += self.speed
 
     def draw(self, surface):
-        pygame.draw.rect(
-            surface,
-            LANE_COLORS[self.lane],
-            (self.x, self.y, NOTE_WIDTH, NOTE_HEIGHT),
-            border_radius=8,
+        """Draws a line for all lanes in the note"""
+        for i, finger_up in enumerate(self.note.finger_positions):
+            x = i * LANE_WIDTH + 10
+            if finger_up:
+                pygame.draw.rect(
+                surface,
+                LANE_COLORS[i],
+                (x, self.y, NOTE_WIDTH, NOTE_HEIGHT),
+                border_radius=8,
         )
 
     def is_hittable(self):
         return abs(self.y - HIT_LINE_Y) <= HIT_WINDOW
 
 
-# -----------------------------
-# Generate notes
-# -----------------------------
-notes = []
-spawn_timer = 0
-spawn_interval = 40
-song_length = 1200
-frames_elapsed = 0
-
-# -----------------------------
-# Main loop
-# -----------------------------
-running = True
-
-while running:
-    clock.tick(FPS)
-    frames_elapsed += 1
-
-    # -------------------------
-    # Spawn notes
-    # -------------------------
-    spawn_timer += 1
-
-    if spawn_timer >= spawn_interval and frames_elapsed < song_length:
-        lane = random.randint(0, 3)
-        notes.append(Note(lane, -NOTE_HEIGHT))
-        spawn_timer = 0
-
-    # -------------------------
-    # Events
-    # -------------------------
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key in KEYS:
-                lane = KEYS.index(event.key)
-
-                hit_note = None
-
-                for note in notes:
-                    if note.lane == lane and note.is_hittable():
-                        hit_note = note
-                        break
-
-                if hit_note:
-                    notes.remove(hit_note)
-                    score += 100
-                    combo += 1
-                    max_combo = max(max_combo, combo)
-                else:
-                    combo = 0
-                    misses += 1
-
-    # -------------------------
-    # Update notes
-    # -------------------------
-    for note in notes[:]:
-        note.update()
-
-        # Missed note
-        if note.y > HEIGHT:
-            notes.remove(note)
-            combo = 0
-            misses += 1
-
-    # -------------------------
-    # Drawing
-    # -------------------------
+def draw_level_select(level_files: list[str], selected_level: int):
     screen.fill(BLACK)
 
-    # Draw lanes
+    title = font.render("Select a Level", True, WHITE)
+    screen.blit(title, (WIDTH // 2 - 120, 100))
+
+    for i, level in enumerate(level_files):
+        colour = GREEN if i == selected_level else WHITE
+
+        # This makes sure that '.json' is removed if it exists
+        text = small_font.render(level.replace(".json", ""), True, colour)
+        screen.blit(text, (WIDTH // 2 - 80, 220 + i * 50))
+
+    instructions = small_font.render(
+        "UP/DOWN to choose, ENTER to play",
+        True,
+        WHITE,
+    )
+
+    screen.blit(instructions, (WIDTH // 2 - 180, HEIGHT - 120))
+
+def draw_game_background(song_name: str):
+    screen.fill(BLACK)
+    
+    song_text = small_font.render(song_name, True, WHITE)
+    screen.blit(song_text, (WIDTH - 220, 20))
+    
+    # Drawing lanes
     for i in range(LANE_COUNT):
         x = i * LANE_WIDTH
 
@@ -175,11 +140,7 @@ while running:
         4,
     )
 
-    # Draw notes
-    for note in notes:
-        note.draw(screen)
-
-    # Draw score
+def draw_score(score, combo, misses):
     score_text = small_font.render(f"Score: {score}", True, WHITE)
     combo_text = small_font.render(f"Combo: {combo}", True, WHITE)
     miss_text = small_font.render(f"Misses: {misses}", True, WHITE)
@@ -188,14 +149,160 @@ while running:
     screen.blit(combo_text, (20, 55))
     screen.blit(miss_text, (20, 90))
 
-    # End screen
-    if frames_elapsed >= song_length and len(notes) == 0:
-        end_text = font.render("Song Complete!", True, WHITE)
-        combo_end = small_font.render(f"Max Combo: {max_combo}", True, WHITE)
+def draw_results_screen(score, max_combo):
+    end_text = font.render("Level Complete!", True, WHITE)
+    combo_end = small_font.render(
+        f"Score: {score}, Max Combo: {max_combo}",
+        True,
+        WHITE,
+    )
 
-        screen.blit(end_text, (WIDTH // 2 - 120, HEIGHT // 2 - 50))
-        screen.blit(combo_end, (WIDTH // 2 - 100, HEIGHT // 2))
+    return_text = small_font.render(
+        "Returning to level select...",
+        True,
+        WHITE,
+    )
 
-    pygame.display.flip()
+    screen.blit(end_text, (WIDTH // 2 - 120, HEIGHT // 2 - 50))
+    screen.blit(combo_end, (WIDTH // 2 - 100, HEIGHT // 2))
+    screen.blit(return_text, (WIDTH // 2 - 160, HEIGHT // 2 + 50))
 
-pygame.quit()
+
+# -----------------------------
+# Main loop
+# -----------------------------
+def main():
+    running = True
+    state = GameState.LEVEL_SELECT
+
+    notes: list[NoteObject] = []
+    level: Level
+    note_index: int = 0 # Represents where we are in the level node spawn sequence
+    level_names: list[str] = get_level_names()
+    print(level_names)
+    selected_level_index = 0
+    frames_elapsed = 1
+
+    # The difference in frames between when a note spawns and should be played
+    spawn_play_offset = 0
+
+    while running:
+        clock.tick(FPS)
+        frames_elapsed += 1
+
+        # Spawning Logic
+        if state == GameState.PLAYING:
+            if len(level.gameplay_notes) > note_index:
+                next_note = level.gameplay_notes[note_index]
+                next_play_time = next_note.time_played * FPS
+                next_spawn_time = next_play_time - spawn_play_offset
+
+                if frames_elapsed >= next_spawn_time:
+                    notes.append(NoteObject(next_note, -NOTE_HEIGHT, level.speed))
+                    note_index += 1
+
+            # TODO start playing music if not already playing when frames_elapsed = 0
+
+        # Events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+
+                # Level select controls
+                if state == GameState.LEVEL_SELECT:
+                    if event.key == pygame.K_UP:
+                        selected_level_index = (selected_level_index - 1) % len(level_names)
+
+                    elif event.key == pygame.K_DOWN:
+                        selected_level_index = (selected_level_index + 1) % len(level_names)
+
+                    # A level has been selected, so load it and start game
+                    elif event.key == pygame.K_RETURN:
+
+                        level = load_level("levels/" + level_names[selected_level_index])
+
+                        notes.clear()
+
+                        frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
+                        score = 0
+                        combo = 0
+                        note_index = 0
+                        misses = 0
+                        max_combo = 0
+                        spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
+                        state = GameState.PLAYING
+
+                elif state == GameState.PLAYING:
+                    
+                    # TODO change this to use the hand velocity from sensors
+                    if event.key in KEYS:
+                        lane = KEYS.index(event.key)
+
+                        hit_note = None
+
+                        # This setup means that only one note can be hit at a time.
+                        # This shouldn't matter though, just don't put notes at the exact same time
+                        for note in notes:
+                            if note.note.finger_positions[lane] and note.is_hittable():
+                                hit_note = note
+                                break
+
+                        if hit_note:
+                            notes.remove(hit_note)
+                            score += 100
+                            combo += 1
+                            max_combo = max(max_combo, combo)
+                        else:
+                            combo = 0
+                            misses += 1
+
+        # Game Logic
+        if state == GameState.PLAYING:
+            #Update Notes
+            for note in notes[:]:
+                note.update()
+
+                # Missed note
+                if note.y > HEIGHT:
+                    notes.remove(note)
+                    combo = 0
+                    misses += 1
+            
+            # Level Completed
+            if frames_elapsed >= level.length * FPS and not notes:
+                state = GameState.RESULTS
+                frames_elapsed = 0
+
+        elif state == GameState.RESULTS:
+            if frames_elapsed >= FPS * RESULTS_SCREEN_SECONDS:
+                state = GameState.LEVEL_SELECT
+        
+
+        # Drawing
+        if state == GameState.LEVEL_SELECT:
+            draw_level_select(level_names, selected_level_index)
+        elif state in (GameState.PLAYING, GameState.RESULTS):
+            draw_game_background(level.name)
+            
+            # Draw notes
+            for note in notes:
+                note.draw(screen)
+
+            # Draw score
+            draw_score(score, combo, misses)
+
+            # Results screen
+            if state == GameState.RESULTS:
+                draw_results_screen(score, max_combo)
+
+        pygame.display.flip()
+
+    pygame.quit()
+
+
+
+
+if __name__ == "__main__":
+    main()
