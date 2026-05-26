@@ -244,8 +244,8 @@ def load_level(path: str) -> Level:
         data = json.load(file)
 
     audio_notes = []
-    for note in data["audio_notes"]:
-        audio_notes.append(AudioNote(note["time_played"], note["hertz"]))
+    #for note in data["audio_notes"]:
+    #    audio_notes.append(AudioNote(note["time_played"], note["hertz"]))
 
     gameplay_notes = []
     for note in data["gameplay_notes"]:

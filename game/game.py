@@ -386,7 +386,6 @@ def draw_hand_state(img, range):
     img = img.transpose((1, 0, 2))
     surface = pygame.surfarray.make_surface(img)
     screen.blit(surface, (WIDTH//2 + 50, HEIGHT//2 - 100))
-    enabled = range <= ACTIVATE_DIST
     BarWidth = 320
     if range > 120:
         range = 120
@@ -469,7 +468,8 @@ def main():
             if not imageQueue.empty():
                 img = imageQueue.get()
             if not rangeQueue.empty():
-                enter = rangeQueue.get()
+                range = rangeQueue.get()
+            enter = range < 30
             print(fingers, enter, previousEnter)
 
         # Level select controls
