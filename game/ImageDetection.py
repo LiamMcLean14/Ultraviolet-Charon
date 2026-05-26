@@ -3,10 +3,12 @@ import numpy as np
 import cv2
 from cvzone.HandTrackingModule import HandDetector
 
-url = "http://10.160.24.114/capture"
+url = "http://10.197.16.114/capture"
+detector = HandDetector(detectionCon=0.8, maxHands=1)
 
 def getFingerData():
-    detector = HandDetector(detectionCon=0.8, maxHands=1)
+    fingers = [-1]
+    img = -1
     try:
         imgResp = urllib.request.urlopen(url)
         imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
@@ -29,7 +31,6 @@ def getFingerData():
     return fingers, img
 
 def showImage():
-    detector = HandDetector(detectionCon=0.8, maxHands=1)
     try:
         imgResp = urllib.request.urlopen(url)
         imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
@@ -40,10 +41,13 @@ def showImage():
 
 if __name__ == "__main__":
     while True:
-        getFingerData()
+        fingers, img = getFingerData()
+        print(fingers)
         #showImage()
         if cv2.waitKey(1) == 27:
             break
     cv2.destroyAllWindows()
+
+# Fingers Array Thumb, pointer, middle, ring, pinky
 
 
