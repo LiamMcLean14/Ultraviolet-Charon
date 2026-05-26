@@ -83,7 +83,8 @@ async def stream_wav(client, filename):
         print("startMusic is ", startMusic)
         while not startMusic:
             await asyncio.sleep(0.001)
-            startMusic = False;
+        print("Started")
+        startMusic = False;
         with wave.open(filename, "rb") as wav:
             if (verifyWav(wav) == -1):
                 return None
@@ -163,7 +164,7 @@ async def stream_wav(client, filename):
                 
                 end = time.perf_counter()
                 elapsed = (end - start) * 1_000_000  # Convert to microseconds
-                print(f'Time taken: {elapsed:.2f} microseconds')
+                #print(f'Time taken: {elapsed:.2f} microseconds')
 
 
 
@@ -474,7 +475,7 @@ def main():
 
         # Level select controls
         if state == GameState.LEVEL_SELECT:
-            print("In level select")
+            #print("In level select")
             if DEBUGFLAG or enter:
                 if DEBUGFLAG == True:
                     fingers = [1,1,1,1,1]
@@ -490,8 +491,8 @@ def main():
                 # A level has been selected, so load it and start game
              
                 elif fingers == [1,1,1,1,1]:
-                    print("Loading level")
-                    global startMusic 
+                    #print("Loading level") 
+                    global startMusic
                     startMusic = True
                     level = load_level("levels/" + level_names[selected_level_index])
 
