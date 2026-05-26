@@ -1,4 +1,3 @@
-:wq
 /*
  * Copyright (c) 2024 Croxel, Inc.
  *
@@ -62,10 +61,14 @@ struct bt_nus_cb nus_listener = {
 	.received = received,
 };
 
+#define SAMPLE_RATE 12000
+#define SAMPLE_PERIOD_US 75
+
 void audio_thread(void)
 {
     uint8_t sample;
-    const uint32_t wait_cycles = k_us_to_cyc_near32(80);
+    const uint32_t wait_cycles = k_us_to_cyc_near32(SAMPLE_PERIOD_US);
+    //const uint32_t wait_cycles = k_us_to_cyc_near32(80);
     
     //I cannot for the life of me figure out why this thing plays music slowly. I think the CPU is overloaded.
     while (1) {
@@ -81,7 +84,8 @@ void audio_thread(void)
             if (elapsed_cycles < wait_cycles) {
               uint32_t waitPeriod = k_cyc_to_us_near32(wait_cycles - elapsed_cycles);
               //printk("Waiting %d nanoseconds\n", waitPeriod);
-              k_busy_wait(waitPeriod);
+              k_sleep(K_USEC(SAMPLE_PERIOD_US));
+              //k_busy_wait(waitPeriod);
             } 
         }
         /*else {

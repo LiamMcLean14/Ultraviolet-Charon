@@ -1,7 +1,15 @@
+DEBUGFLAG = True
+
 import pygame
 import random
 from level_system import GameplayNote, Level, load_level, get_level_names
 from enum import Enum
+if DEBUGFLAG == False:
+    from ImageDetection import *
+import serial
+import json
+import time
+import queue
 
 import asyncio
 import wave
@@ -11,12 +19,35 @@ import numpy as np
 import time
 from bleak import BleakClient, BleakScanner
 
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+import random
+
+url = "http://localhost:8086"
+token = "yjT8eyhxhxvx1hNHMrjI_XydvDVSr_SgtT88slxHxDN8_PlrDVT-7CeepsvrG5upwAGwo8a96iszTNYI8Oez4w=="
+org = "UQ"
+bucket = "InputData"
+
+client = InfluxDBClient(
+    url=url,
+    token=token,
+    org=org
+)
+
+write_api = client.write_api(write_options=SYNCHRONOUS)
+
+
 DEVICE_NAME = "Zephyr"
 UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
 SAMPLE_RATE = 12000
 PACKET_MS = 20
 CHUNK_SIZE = SAMPLE_RATE * PACKET_MS // 1000
+
+soundEffectQueue = Queue()
+startMusic = False
+musicStop = False
+playEffect = False
 
 async def find_device():
     print("Scanning")
@@ -30,13 +61,12 @@ async def find_device():
 
     return None
 
+
 class GameState(Enum):
     LEVEL_SELECT = 0
     PLAYING = 1
     RESULTS = 2
 
-soundEffectQueue = Queue()
-startMusic = False
 
 def verifyWav(wav):
     channels = wav.getnchannels()
@@ -68,10 +98,9 @@ async def stream_wav(client, filename):
     global startMusic
     while(True):
         print("startMusic is ", startMusic)
-        while(True):
-            if startMusic == True:
-                break
-        startMusic = False;
+        while not startMusic:
+            await asyncio.sleep(0.001)
+            startMusic = False;
         with wave.open(filename, "rb") as wav:
             if (verifyWav(wav) == -1):
                 return None
@@ -84,12 +113,14 @@ async def stream_wav(client, filename):
 
             interval = CHUNK_SIZE / SAMPLE_RATE
             next_time = time.perf_counter()
+
+
             while True:
                 global musicStop
                 if musicStop == True:
                     musicStop = False
                     break
-
+                start = time.perf_counter()
                 data = wav.readframes(CHUNK_SIZE)
             
                 if (finishedEffect == 1):
@@ -142,11 +173,17 @@ async def stream_wav(client, filename):
                 await client.write_gatt_char(UUID, data, response=False)
                 
                 next_time += interval
-                delay = next_time - time.perf_counter()
-
+                delay = next_time - time.perf_counter() 
+                
                 if delay > 0:
                     await asyncio.sleep(delay)
-            
+                
+                end = time.perf_counter()
+                elapsed = (end - start) * 1_000_000  # Convert to microseconds
+                print(f'Time taken: {elapsed:.2f} microseconds')
+
+
+
             print("Finished Audio Transmission")
 
 playEffect = False
@@ -189,12 +226,13 @@ async def connect():
 # Initialization
 # -----------------------------
 pygame.init()
-
-WIDTH = 600
+WIDTHOFFSET = 600
+WIDTH = 600 + WIDTHOFFSET
 HEIGHT = 800
-FPS = 60
+FPS = 30
 PRE_LEVEL_SECONDS = 3
 RESULTS_SCREEN_SECONDS = 3
+ACTIVATE_DIST = 30
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Basic Rhythm Game")
@@ -221,7 +259,7 @@ LANE_COLORS = [RED, YELLOW, GREEN, BLUE, ORANGE]
 # Lanes
 # -----------------------------
 LANE_COUNT = 5
-LANE_WIDTH = WIDTH // LANE_COUNT
+LANE_WIDTH = (WIDTH - WIDTHOFFSET) // LANE_COUNT
 
 KEYS = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
 KEY_LABELS = ["1", "2", "3", "4", "5"]
@@ -233,6 +271,17 @@ NOTE_WIDTH = LANE_WIDTH - 20
 NOTE_HEIGHT = 25
 HIT_LINE_Y = HEIGHT - 120
 HIT_WINDOW = 40
+
+rangeQueue = queue.Queue(maxsize=1)
+fingerQueue = queue.Queue(maxsize=1)
+imageQueue = queue.Queue(maxsize=1)
+
+if DEBUGFLAG == False:
+    ser = serial.Serial(
+        port='/dev/ttyACM0',
+        baudrate=115200,
+        timeout=1
+)
 
 class NoteObject:
     """
@@ -269,14 +318,14 @@ def draw_level_select(level_files: list[str], selected_level: int):
     screen.fill(BLACK)
 
     title = font.render("Select a Level", True, WHITE)
-    screen.blit(title, (WIDTH // 2 - 120, 100))
+    screen.blit(title, ((WIDTH - WIDTHOFFSET) // 2 - 120, 100))
 
     for i, level in enumerate(level_files):
         colour = GREEN if i == selected_level else WHITE
 
         # This makes sure that '.json' is removed if it exists
         text = small_font.render(level.replace(".json", ""), True, colour)
-        screen.blit(text, (WIDTH // 2 - 80, 220 + i * 50))
+        screen.blit(text, ((WIDTH - WIDTHOFFSET) // 2 - 80, 220 + i * 50))
 
     instructions = small_font.render(
         "UP/DOWN to choose, ENTER to play",
@@ -284,13 +333,13 @@ def draw_level_select(level_files: list[str], selected_level: int):
         WHITE,
     )
 
-    screen.blit(instructions, (WIDTH // 2 - 180, HEIGHT - 120))
+    screen.blit(instructions, ((WIDTH - WIDTHOFFSET) // 2 - 180, HEIGHT - 120))
 
 def draw_game_background(song_name: str, selected_lanes: list[bool]):
     screen.fill(BLACK)
     
     song_text = small_font.render(song_name, True, WHITE)
-    screen.blit(song_text, (WIDTH - 220, 20))
+    screen.blit(song_text, (WIDTH + 40 - WIDTHOFFSET, 20))
     
     # Drawing lanes
     for i in range(LANE_COUNT):
@@ -319,7 +368,7 @@ def draw_game_background(song_name: str, selected_lanes: list[bool]):
         screen,
         WHITE,
         (0, HIT_LINE_Y + NOTE_HEIGHT // 2),
-        (WIDTH, HIT_LINE_Y + NOTE_HEIGHT // 2),
+        (WIDTH - WIDTHOFFSET, HIT_LINE_Y + NOTE_HEIGHT // 2),
         4,
     )
 
@@ -328,9 +377,9 @@ def draw_score(score, combo, misses):
     combo_text = small_font.render(f"Combo: {combo}", True, WHITE)
     miss_text = small_font.render(f"Misses: {misses}", True, WHITE)
 
-    screen.blit(score_text, (20, 20))
-    screen.blit(combo_text, (20, 55))
-    screen.blit(miss_text, (20, 90))
+    screen.blit(score_text, (10, 20))
+    screen.blit(combo_text, (10, 55))
+    screen.blit(miss_text, (10, 90))
 
 def draw_results_screen(score, max_combo):
     end_text = font.render("Level Complete!", True, WHITE)
@@ -346,9 +395,28 @@ def draw_results_screen(score, max_combo):
         WHITE,
     )
 
-    screen.blit(end_text, (WIDTH // 2 - 120, HEIGHT // 2 - 50))
-    screen.blit(combo_end, (WIDTH // 2 - 100, HEIGHT // 2))
-    screen.blit(return_text, (WIDTH // 2 - 160, HEIGHT // 2 + 50))
+    screen.blit(end_text, ((WIDTH - WIDTHOFFSET) // 2 - 120, HEIGHT // 2 - 50))
+    screen.blit(combo_end, ((WIDTH - WIDTHOFFSET) // 2 - 100, HEIGHT // 2))
+    screen.blit(return_text, ((WIDTH - WIDTHOFFSET) // 2 - 160, HEIGHT // 2 + 50))
+
+def draw_hand_state(img, range):
+    img = img.transpose((1, 0, 2))
+    surface = pygame.surfarray.make_surface(img)
+    screen.blit(surface, (WIDTH//2 + 50, HEIGHT//2 - 100))
+    enabled = range <= ACTIVATE_DIST
+    BarWidth = 320
+    if range > 120:
+        range = 120
+    slider_width = BarWidth * (range / 120)
+    if range > ACTIVATE_DIST:
+        bar_colour = (255,0,0)
+    else:
+        bar_colour = (0,255,0)
+    if range >= 120 or range == False:
+        bar_colour = (50,50,50)
+    pygame.draw.rect(screen, bar_colour, (WIDTH // 2 + 50, HEIGHT // 2 + 140, BarWidth, 50))
+    pygame.draw.rect(screen, (50,50,50), (WIDTH // 2 + 50, HEIGHT // 2 + 140, slider_width, 50))
+    pygame.draw.rect(screen, (255,255,255), (WIDTH // 2 + 50 + 78, HEIGHT // 2 + 140, 10, 50))
 
 def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
     """Determines if the correct lanes are selected to match the target lanes"""
@@ -356,10 +424,6 @@ def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
         if bool(target_lanes[i]) != lane:
             return False
     return True
-
-# -----------------------------
-# Main loop
-# -----------------------------
 
 
 # THREAD 1
@@ -369,11 +433,14 @@ def startTransmission():
 thread1 = threading.Thread(target=startTransmission) 
 thread2 = threading.Thread(target=queueSoundEffect)
 
+
+# -----------------------------
+# Main loop
+# -----------------------------
 def main():
-    running = True  
+    running = True
     state = GameState.LEVEL_SELECT
     thread1.start()
-
     notes: list[NoteObject] = []
     level: Level
     note_index: int = 0 # Represents where we are in the level node spawn sequence
@@ -386,6 +453,12 @@ def main():
     combo = 0
     max_combo = 0
     misses = 0
+    previousEnter = False
+
+    fingers = [-1]
+    img = -1
+    enter = False
+    range = -1
 
     # The difference in frames between when a note spawns and should be played
     spawn_play_offset = 0
@@ -398,79 +471,89 @@ def main():
         if state == GameState.PLAYING:
             if len(level.gameplay_notes) > note_index:
                 next_note = level.gameplay_notes[note_index]
-                next_play_time = next_note.time_played * FPS
+                next_play_time = next_note.time_played * FPS * 3
                 next_spawn_time = next_play_time - spawn_play_offset
-
                 if frames_elapsed >= next_spawn_time:
                     notes.append(NoteObject(next_note, -NOTE_HEIGHT, level.speed))
                     note_index += 1
-                                            
-        # Events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
 
-            # Level select controls
-            if state == GameState.LEVEL_SELECT:
-                if event.type == pygame.KEYDOWN:
+            # TODO start playing music if not already playing when frames_elapsed = 0
 
-                    if event.key == pygame.K_UP:
-                       selected_level_index = (selected_level_index - 1) % len(level_names)
+        if DEBUGFLAG == False:
+            # Events
+            if not fingerQueue.empty():
+                fingers = fingerQueue.get()
+            if not imageQueue.empty():
+                img = imageQueue.get()
+            if not rangeQueue.empty():
+                enter = rangeQueue.get()
+            print(fingers, enter, previousEnter)
 
-                    elif event.key == pygame.K_DOWN:
-                        selected_level_index = (selected_level_index + 1) % len(level_names)
-
-                    # A level has been selected, so load it and start game
-                    elif event.key == pygame.K_RETURN:
-                        global startMusic 
-                        startMusic = True
-                        level = load_level("levels/" + level_names[selected_level_index])
-
-                        notes.clear()
-
-                        frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
-                        score = 0
-                        combo = 0
-                        note_index = 0
-                        misses = 0
-                        max_combo = 0
-                        selected_lanes = [False, False, False, False, False]
-                        spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
-                        state = GameState.PLAYING
-
-            elif state == GameState.PLAYING:
-                # This is currently set to track which of the keys are held, and trigger those keys
-                # When enter is pressed. TODO change this to tracking which fingers are held up, and
-                # trigger when the player moves their hand forward.
-                # This doesn't even work lol because my keyboard can't accept 6 keys pressed at once
-                if event.type == pygame.KEYDOWN:
-
-                    if event.key in KEYS:
-                        selected_lanes[KEYS.index(event.key)] = True
-
-                    elif event.key == pygame.K_RETURN:
-                        hit_note = None
-
-                        for note in notes:
-                            if note.is_hittable():
-                                hit_note = note
-                                break
-
-                        if hit_note and correct_lanes(selected_lanes, note.note.finger_positions):
-                            notes.remove(hit_note)
-                            score += 100
-                            combo += 1
-                            max_combo = max(max_combo, combo)
-                            global playEffect
-                            playEffect = True
-                        else:
-                            # Button was pressed with no notes in range or with wrong lanes selected
-                            combo = 0
-                            misses += 1
+        # Level select controls
+        if state == GameState.LEVEL_SELECT:
+            print("In level select")
+            if DEBUGFLAG or enter:
+                if DEBUGFLAG == True:
+                    fingers = [1,1,1,1,1]
                 
-                elif event.type == pygame.KEYUP:
-                    if event.key in KEYS:
-                        selected_lanes[KEYS.index(event.key)] = False
+                # if sum(fingers) == 0:
+                #     running = False
+                if fingers == [0,1,0,0,0]: # Up Arrow
+                    selected_level_index = (selected_level_index - 1) % len(level_names)
+
+                elif fingers == [1,0,0,0,0]: # Down arrow
+                    selected_level_index = (selected_level_index + 1) % len(level_names)
+
+                # A level has been selected, so load it and start game
+             
+                elif fingers == [1,1,1,1,1]:
+                    print("Loading level")
+                    global startMusic 
+                    startMusic = True
+                    level = load_level("levels/" + level_names[selected_level_index])
+
+                    notes.clear()
+
+                    frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
+                    score = 0
+                    combo = 1
+                    note_index = 0
+                    misses = 0
+                    max_combo = 1
+                    selected_lanes = [False, False, False, False, False]
+                    spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
+                    state = GameState.PLAYING
+
+        elif state == GameState.PLAYING:
+            # This is currently set to track which of the keys are held, and trigger those keys
+            # When enter is pressed. TODO change this to tracking which fingers are held up, and
+            # trigger when the player moves their hand forward.
+            # This doesn't even work lol because my keyboard can't accept 6 keys pressed at once
+
+            if sum(fingers) > 0:
+                for idx, fingerState in enumerate(fingers):
+                    selected_lanes[idx] = (fingerState == 1)
+
+            if enter and not previousEnter:
+                hit_note = None
+
+                for note in notes:
+                    if note.is_hittable():
+                        hit_note = note
+                        break
+
+                if hit_note and correct_lanes(selected_lanes, note.note.finger_positions):
+                    notes.remove(hit_note)
+                    score += 100 * combo
+                    combo += 1
+                    max_combo = max(max_combo, combo)
+                else:
+                    # Button was pressed with no notes in range or with wrong lanes selected
+                    combo = 1
+                    misses += 1
+        previousEnter = enter
+        for idx, fingerState in enumerate(fingers):
+            selected_lanes[idx] = (fingerState == 1)
 
         # Game Logic
         if state == GameState.PLAYING:
@@ -481,15 +564,19 @@ def main():
                 # Missed note
                 if note.y > HEIGHT:
                     notes.remove(note)
-                    combo = 0
+                    combo = 1
                     misses += 1
             
             # Level Completed
             if frames_elapsed >= level.length * FPS and not notes:
-                global musicStop
-                musicStop = True
                 state = GameState.RESULTS
                 frames_elapsed = 0
+                point = (Point("Highscores")
+                         .tag("Level", level_names[selected_level_index])
+                         .field("Score", float(score))
+                )
+                write_api.write(bucket=bucket, org=org, record=point)
+
 
         elif state == GameState.RESULTS:
             if frames_elapsed >= FPS * RESULTS_SCREEN_SECONDS:
@@ -512,10 +599,40 @@ def main():
             # Results screen
             if state == GameState.RESULTS:
                 draw_results_screen(score, max_combo)
-
+        if type(img) != int:
+            draw_hand_state(img, range)
         pygame.display.flip()
 
     pygame.quit()
 
+def getFingersThread():
+    while True:
+        try:
+            fingers, img = getFingerData()
+            fingerQueue.put(fingers)
+            imageQueue.put(img)
+        except:
+            rangeQueue.put([-1])
+            imageQueue.put(-1)
+
+
+def getUltrasonicInputThread():
+    while True:
+        ser.reset_input_buffer()
+        try:
+            line = ser.readline().decode('utf-8').strip()
+            if line:
+                jsonDict = json.loads(line)
+                rangeQueue.put(jsonDict["Predicted"])
+        except:
+            rangeQueue.put(False)
+
+
 if __name__ == "__main__":
+    if DEBUGFLAG == False:
+        reader = threading.Thread(target=getUltrasonicInputThread, daemon=True)
+        reader.start()
+        fingerReader = threading.Thread(target=getFingersThread, daemon=True)
+        fingerReader.start()
     main()
+    ser.close()
