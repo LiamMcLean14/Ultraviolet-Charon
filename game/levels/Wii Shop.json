@@ -1,0 +1,449 @@
+{
+    "name": "Wii shop",
+    "description": "I don't know if the hardware can keep up with this",
+    "length": 32.5,
+    "difficulty": 5,
+    "speed": 6,
+    "gameplay_notes": [
+        {
+            "time_played": 0.08,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 1.32,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 2.52,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "time_played": 2.92,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "time_played": 6.76,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 7.00,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 7.36,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 7.6,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 8.00,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 8.24,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 8.6,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 8.84,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 10.00,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 10.24,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 10.60,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 10.84,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 11.24,
+            "finger_positions": [
+                0,
+                0,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 11.48,
+            "finger_positions": [
+                0,
+                0,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 11.84,
+            "finger_positions": [
+                0,
+                0,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 12.80,
+            "finger_positions": [
+                0,
+                0,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 13.24,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played": 13.48,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played": 13.84,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played": 14.08,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played": 14.48,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 14.72,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 15.08,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 15.32,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 16.52,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 16.76,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 17.12,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 17.36,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 17.72,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 17.96,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 18.32,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 18.52,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 20.36,
+            "finger_positions": [
+                1,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 20.96,
+            "finger_positions": [
+                1,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 23.4,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 24.4,
+            "finger_positions": [
+                0,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 26.04,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played": 27.48,
+            "finger_positions": [
+                0,
+                0,
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played": 28.64,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played": 29.08,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        }
+    ]
+}
