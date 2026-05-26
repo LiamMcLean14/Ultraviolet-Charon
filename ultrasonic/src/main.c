@@ -79,7 +79,7 @@ int main(void)
                 kalman_filter_step(current_state, measured_distance_mm, 0.1, BLENDING_FACTOR);
         }
 
-        printf("Measured: %04f cm, Predicted: %04f cm, Velocity: %04f cm/s\n",
+        printk("{\"Measured\": %04f, \"Predicted\": %04f, \"Velocity\": %04f}\n",
                (measured_distance_mm / 10), (current_state.distance / 10),
                (current_state.velocity / 10));
 
