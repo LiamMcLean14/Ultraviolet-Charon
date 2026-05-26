@@ -1,4 +1,4 @@
-DEBUGFLAG = True
+DEBUGFLAG = False
 
 import pygame
 import random
