@@ -1,7 +1,7 @@
 {
     "name": "Undertale",
     "description": "A sample level for testing",
-    "length": 26.0,
+    "length": 20.0,
     "difficulty": 1,
     "speed": 6,
     "gameplay_notes": [
@@ -54,15 +54,35 @@
                 0,
                 0
             ]
-        },
+        },        
         {
-            "time_played":10.0,
+            "time_played": 7.0,
             "finger_positions": [
                 0,
                 1,
                 1,
-                0,
+                1,
                 0
+            ]
+        },
+        {
+            "time_played": 8.0,
+            "finger_positions": [
+                1,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        {
+            "time_played":10.0,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
             ]
         },
         {
@@ -70,29 +90,139 @@
             "finger_positions": [
                 0,
                 1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":13.0,
+            "finger_positions": [
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },        
+        {
+            "time_played":13.5,
+            "finger_positions": [
+                0,
+                1,
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "time_played":14.5,
+            "finger_positions": [
+                1,
+                1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":16.0,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played":16.5,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "time_played":18,
+            "finger_positions": [
+                1,
+                1,
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "time_played":18.5,
+            "finger_positions": [
+                1,
+                1,
                 1,
                 0,
                 0
             ]
         },
         {
-            "time_played":14.0,
+            "time_played":19,
             "finger_positions": [
+                1,
+                1,
                 0,
                 0,
-                0,
-                0,
-                1
+                0
             ]
         },
         {
-            "time_played":26.0,
+            "time_played":19.5,
+            "finger_positions": [
+                1,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":21,
+            "finger_positions": [
+                1,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":22,
             "finger_positions": [
                 1,
                 1,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":23,
+            "finger_positions": [
                 1,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "time_played":23.5,
+            "finger_positions": [
                 1,
-                1
+                0,
+                0,
+                0,
+                0
             ]
         }
     ]
