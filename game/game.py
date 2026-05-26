@@ -1,18 +1,210 @@
+DEBUGFLAG = True
+
 import pygame
 import random
 from level_system import GameplayNote, Level, load_level, get_level_names
 from enum import Enum
-from ImageDetection import *
+if DEBUGFLAG == False:
+    from ImageDetection import *
 import serial
 import json
 import time
-import threading
 import queue
+
+import asyncio
+import wave
+import threading
+from queue import Queue
+import numpy as np
+import time
+from bleak import BleakClient, BleakScanner
+
+
+DEVICE_NAME = "Zephyr"
+DEBUGFLAG = True
+UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+
+SAMPLE_RATE = 12000
+PACKET_MS = 20
+CHUNK_SIZE = SAMPLE_RATE * PACKET_MS // 1000
+
+soundEffectQueue = Queue()
+startMusic = False
+musicStop = False
+playEffect = False
+
+async def find_device():
+    print("Scanning")
+
+    devices = await BleakScanner.discover()
+
+    for i in devices:
+        #print(i.name, i.address)
+        if i.name == DEVICE_NAME:
+            return i
+
+    return None
+
 
 class GameState(Enum):
     LEVEL_SELECT = 0
     PLAYING = 1
     RESULTS = 2
+
+
+def verifyWav(wav):
+    channels = wav.getnchannels()
+    sample_width = wav.getsampwidth()
+    sample_rate = wav.getframerate()
+
+    #print("Channels:", channels)
+    #print("Sample width:", sample_width)
+    #print("Sample rate:", sample_rate)
+
+    if channels != 1:
+        print("WAV must be mono")
+        return -1
+
+    if sample_width != 1:
+        print("WAV must be 8-bit")
+        return -1
+
+    if sample_rate != SAMPLE_RATE:
+        print(f"WAV must be {SAMPLE_RATE} Hz")
+        return -1
+    return 0;
+  
+musicStop = False
+
+async def stream_wav(client, filename):
+    #ONLY NOW DO WE START THE EFFECTS LOADING THREAD
+    thread2.start()
+    global startMusic
+    while(True):
+        print("startMusic is ", startMusic)
+        while not startMusic:
+            await asyncio.sleep(0.001)
+            startMusic = False;
+        with wave.open(filename, "rb") as wav:
+            if (verifyWav(wav) == -1):
+                return None
+
+            print("Streaming audio...")
+            
+            #Once an effect has stopped playing, load the next
+            finishedEffect = 1
+            currentEffect = 0
+
+            interval = CHUNK_SIZE / SAMPLE_RATE
+            next_time = time.perf_counter()
+
+
+            while True:
+                global musicStop
+                if musicStop == True:
+                    musicStop = False
+                    break
+                start = time.perf_counter()
+                data = wav.readframes(CHUNK_SIZE)
+            
+                if (finishedEffect == 1):
+                    if (soundEffectQueue.empty() == False):
+                        request = soundEffectQueue.get()
+                        print(f"Playing sound effect {request}")
+                        currentEffect = wave.open(request, "rb")
+                        finishedEffect = 0
+                
+                if (finishedEffect == 0):
+                    additionalData = currentEffect.readframes(CHUNK_SIZE)
+                    if not additionalData:
+                        print("End of Sound Effect")
+                        finishedEffect = 1
+                    else:
+                        dataSampled = np.frombuffer(data, dtype=np.uint8).astype(np.int16)
+                        additionalSampled = np.frombuffer(additionalData, dtype = np.uint8).astype(np.int16)
+
+                        mainTrackLength = len(dataSampled)
+                        soundeffectLength = len(additionalSampled)
+
+                        dataSampled -= 128
+                        additionalSampled -= 128
+
+                        #Yes I am aware that in theory a sound effect could play with the same remaining length as the main track and 
+                        #maybe cause a crash on the board because it sends less than it expects but that is astronomically unlikely
+                        if(mainTrackLength<soundeffectLength):
+                            dataSampled = np.pad(dataSampled, (0, soundeffectLength - mainTrackLength), mode='constant', constant_values=0)                        
+                        if(soundeffectLength<mainTrackLength):
+                            additionalSampled = np.pad(additionalSampled, (0, mainTrackLength - soundeffectLength), mode='constant', constant_values=0)
+                        
+                        MUSIC_VOLUME = 1
+                        SFX_VOLUME = 1.2
+
+                        combined = (
+                            dataSampled.astype(np.int16) * MUSIC_VOLUME +
+                            additionalSampled.astype(np.int16) * SFX_VOLUME
+                        )
+        
+                        combined = np.clip(combined, -128, 127)
+                        
+                        combined = (combined+128).astype(np.uint8)
+                        data = combined.tobytes()
+                                            
+                #Once the music finishes this closes. 
+                if not data:
+                    print("EOF")
+                    break
+                
+                await client.write_gatt_char(UUID, data, response=False)
+                
+                next_time += interval
+                delay = next_time - time.perf_counter() 
+                
+                if delay > 0:
+                    await asyncio.sleep(delay)
+                
+                end = time.perf_counter()
+                elapsed = (end - start) * 1_000_000  # Convert to microseconds
+                print(f'Time taken: {elapsed:.2f} microseconds')
+
+
+
+            print("Finished Audio Transmission")
+
+playEffect = False
+def queueSoundEffect():
+    print("queueSoundEffects thread created")
+    time.sleep(2)
+    while(1):
+        global playEffect
+        while(1):
+            if (playEffect == True):
+            #        request = input("Enter a sound effects filePath to play (defaults to sounds/quietquickboom.wav if empty): ")
+            #        if (request == ""):
+                request = "sounds/score.wav"
+            
+                with wave.open(request, "rb") as wav:
+                    if (verifyWav(wav) == 0):
+                        soundEffectQueue.put(request)
+                
+                playEffect = False
+                break    
+    return;
+
+async def connect():
+    board = await find_device()
+    if board is None:
+        print("nrf52840 not found")
+        return
+    
+    print("Attempting to connect to board")
+    async with BleakClient(board.address) as client:
+        print("Connected!")        
+        #sound_name = input("Enter the name of the music file (defaults to sounds/sound.wav if empty): ") 
+        #if (sound_name == ""):
+        sound_name = "sounds/sound.wav"
+        print(f"Streaming \"{sound_name}\"")
+        await stream_wav(client, sound_name)
+
 
 # -----------------------------
 # Initialization
@@ -66,10 +258,12 @@ HIT_WINDOW = 40
 rangeQueue = queue.Queue(maxsize=1)
 fingerQueue = queue.Queue(maxsize=1)
 imageQueue = queue.Queue(maxsize=1)
-ser = serial.Serial(
-    port='/dev/ttyACM0',
-    baudrate=115200,
-    timeout=1
+
+if DEBUGFLAG == False:
+    ser = serial.Serial(
+        port='/dev/ttyACM0',
+        baudrate=115200,
+        timeout=1
 )
 
 class NoteObject:
@@ -200,13 +394,22 @@ def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
             return False
     return True
 
+
+# THREAD 1
+def startTransmission():
+    asyncio.run(connect())
+
+thread1 = threading.Thread(target=startTransmission) 
+thread2 = threading.Thread(target=queueSoundEffect)
+
+
 # -----------------------------
 # Main loop
 # -----------------------------
 def main():
     running = True
     state = GameState.LEVEL_SELECT
-
+    thread1.start()
     notes: list[NoteObject] = []
     level: Level
     note_index: int = 0 # Represents where we are in the level node spawn sequence
@@ -244,18 +447,23 @@ def main():
 
             # TODO start playing music if not already playing when frames_elapsed = 0
 
-        # Events
-        if not fingerQueue.empty():
-            fingers = fingerQueue.get()
-        if not imageQueue.empty():
-            img = imageQueue.get()
-        if not rangeQueue.empty():
-            enter = rangeQueue.get()
-        print(fingers, enter, previousEnter)
+        if DEBUGFLAG == False:
+            # Events
+            if not fingerQueue.empty():
+                fingers = fingerQueue.get()
+            if not imageQueue.empty():
+                img = imageQueue.get()
+            if not rangeQueue.empty():
+                enter = rangeQueue.get()
+            print(fingers, enter, previousEnter)
 
         # Level select controls
         if state == GameState.LEVEL_SELECT:
-            if enter:
+            print("In level select")
+            if DEBUGFLAG or enter:
+                if DEBUGFLAG == True:
+                    fingers = [1,1,1,1,1]
+                
                 # if sum(fingers) == 0:
                 #     running = False
                 if fingers == [0,1,0,0,0]: # Up Arrow
@@ -265,8 +473,11 @@ def main():
                     selected_level_index = (selected_level_index + 1) % len(level_names)
 
                 # A level has been selected, so load it and start game
+             
                 elif fingers == [1,1,1,1,1]:
-
+                    print("Loading level")
+                    global startMusic 
+                    startMusic = True
                     level = load_level("levels/" + level_names[selected_level_index])
 
                     notes.clear()
@@ -380,9 +591,10 @@ def getUltrasonicInputThread():
 
 
 if __name__ == "__main__":
-    reader = threading.Thread(target=getUltrasonicInputThread, daemon=True)
-    reader.start()
-    fingerReader = threading.Thread(target=getFingersThread, daemon=True)
-    fingerReader.start()
+    if DEBUGFLAG == False:
+        reader = threading.Thread(target=getUltrasonicInputThread, daemon=True)
+        reader.start()
+        fingerReader = threading.Thread(target=getFingersThread, daemon=True)
+        fingerReader.start()
     main()
     ser.close()
