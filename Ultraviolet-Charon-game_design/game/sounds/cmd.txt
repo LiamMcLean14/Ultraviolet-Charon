@@ -1,0 +1,17 @@
+This command is used in testing, and it turns any plain old wav into the exact format desired for this py script.
+
+It takes a wav and:
+  Speeds it up a little bit to account for (what i think is) a micro delay on the board
+  Converts it to 12kHz
+  Converts it to 8 bits per sample
+  Halves the volume (tbh this is optional I just kept testing with this explosion noise and it annoyed me)
+
+Why did i pick 12kHz and 8 bits? This board sucks, I am using a pwm pin as a dac and it is struggling to keep up, I haven't done any exact measuring
+but I am fairly certain this thing would rather explode than go beyond what I've set it too. 
+
+I considered 16 bits as our audio to improve the quality that way. Same bandwidth as 16Khz 8 bits -> 8Khz 16 bits. But the board simply cannot handle it.  
+
+
+CMD:
+
+ffmpeg -i input.wav -filter:a "atempo=1.2" -ar 12000 -ac 1 -acodec pcm_u8 -af "volume=0.5" output.wav
