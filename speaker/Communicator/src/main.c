@@ -1,3 +1,4 @@
+:wq
 /*
  * Copyright (c) 2024 Croxel, Inc.
  *
