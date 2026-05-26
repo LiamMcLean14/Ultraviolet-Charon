@@ -24,6 +24,7 @@ HEIGHT = 800
 FPS = 30
 PRE_LEVEL_SECONDS = 3
 RESULTS_SCREEN_SECONDS = 3
+ACTIVATE_DIST = 30
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Basic Rhythm Game")
@@ -188,10 +189,24 @@ def draw_results_screen(score, max_combo):
     screen.blit(combo_end, ((WIDTH - WIDTHOFFSET) // 2 - 100, HEIGHT // 2))
     screen.blit(return_text, ((WIDTH - WIDTHOFFSET) // 2 - 160, HEIGHT // 2 + 50))
 
-def draw_hand_image(img):
+def draw_hand_state(img, range):
     img = img.transpose((1, 0, 2))
     surface = pygame.surfarray.make_surface(img)
     screen.blit(surface, (WIDTH//2 + 50, HEIGHT//2 - 100))
+    enabled = range <= ACTIVATE_DIST
+    BarWidth = 320
+    if range > 120:
+        range = 120
+    slider_width = BarWidth * (range / 120)
+    if range > ACTIVATE_DIST:
+        bar_colour = (255,0,0)
+    else:
+        bar_colour = (0,255,0)
+    if range >= 120 or range == False:
+        bar_colour = (50,50,50)
+    pygame.draw.rect(screen, bar_colour, (WIDTH // 2 + 50, HEIGHT // 2 + 140, BarWidth, 50))
+    pygame.draw.rect(screen, (50,50,50), (WIDTH // 2 + 50, HEIGHT // 2 + 140, slider_width, 50))
+    pygame.draw.rect(screen, (255,255,255), (WIDTH // 2 + 50 + 78, HEIGHT // 2 + 140, 10, 50))
 
 def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
     """Determines if the correct lanes are selected to match the target lanes"""
@@ -224,6 +239,7 @@ def main():
     fingers = [-1]
     img = -1
     enter = False
+    range = -1
 
     # The difference in frames between when a note spawns and should be played
     spawn_play_offset = 0
@@ -250,12 +266,13 @@ def main():
         if not imageQueue.empty():
             img = imageQueue.get()
         if not rangeQueue.empty():
-            enter = rangeQueue.get()
+            range = rangeQueue.get()
+        enter = range <= ACTIVATE_DIST
         print(fingers, enter, previousEnter)
 
         # Level select controls
         if state == GameState.LEVEL_SELECT:
-            if enter:
+            if enter and not previousEnter:
                 # if sum(fingers) == 0:
                 #     running = False
                 if fingers == [0,1,0,0,0]: # Up Arrow
@@ -273,10 +290,10 @@ def main():
 
                     frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
                     score = 0
-                    combo = 0
+                    combo = 1
                     note_index = 0
                     misses = 0
-                    max_combo = 0
+                    max_combo = 1
                     selected_lanes = [False, False, False, False, False]
                     spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
                     state = GameState.PLAYING
@@ -301,12 +318,12 @@ def main():
 
                 if hit_note and correct_lanes(selected_lanes, note.note.finger_positions):
                     notes.remove(hit_note)
-                    score += 100
+                    score += 100 * combo
                     combo += 1
                     max_combo = max(max_combo, combo)
                 else:
                     # Button was pressed with no notes in range or with wrong lanes selected
-                    combo = 0
+                    combo = 1
                     misses += 1
         previousEnter = enter
         for idx, fingerState in enumerate(fingers):
@@ -321,7 +338,7 @@ def main():
                 # Missed note
                 if note.y > HEIGHT:
                     notes.remove(note)
-                    combo = 0
+                    combo = 1
                     misses += 1
             
             # Level Completed
@@ -351,7 +368,7 @@ def main():
             if state == GameState.RESULTS:
                 draw_results_screen(score, max_combo)
         if type(img) != int:
-            draw_hand_image(img)
+            draw_hand_state(img, range)
         pygame.display.flip()
 
     pygame.quit()
@@ -374,7 +391,7 @@ def getUltrasonicInputThread():
             line = ser.readline().decode('utf-8').strip()
             if line:
                 jsonDict = json.loads(line)
-                rangeQueue.put(jsonDict["Predicted"] <= 30)
+                rangeQueue.put(jsonDict["Predicted"])
         except:
             rangeQueue.put(False)
 
