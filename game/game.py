@@ -476,7 +476,7 @@ def main():
         # Level select controls
         if state == GameState.LEVEL_SELECT:
             #print("In level select")
-            if DEBUGFLAG or enter:
+            if DEBUGFLAG or enter and not previousEnter:
                 if DEBUGFLAG == True:
                     fingers = [1,1,1,1,1]
                 
