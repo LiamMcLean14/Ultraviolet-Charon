@@ -1,5 +1,3 @@
-DEBUGFLAG = False
-
 import pygame
 import random
 from level_system import GameplayNote, Level, load_level, get_level_names
@@ -21,7 +19,7 @@ from bleak import BleakClient, BleakScanner
 
 
 DEVICE_NAME = "Zephyr"
-DEBUGFLAG = True
+DEBUGFLAG = False
 UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
 SAMPLE_RATE = 12000
