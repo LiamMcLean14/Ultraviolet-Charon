@@ -586,6 +586,7 @@ def main():
             if frames_elapsed >= level.length * FPS and not notes:
                 state = GameState.RESULTS
                 frames_elapsed = 0
+                #REF: CHATGPT was used to understand the format for sending data to the webdashboard - Ethan
                 point = (Point("Highscores")
                          .tag("Level", level_names[selected_level_index])
                          .field("Score", float(score))
