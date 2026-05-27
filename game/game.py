@@ -92,6 +92,12 @@ def verifyWav(wav):
 musicStop = False
 songPath = ""
 
+"""
+This function was scaffolded by chatGPT and then worked on by me. I needed a head start with how to use 
+BLEAK + get the initial wav streaming and I needed it to debug the speaker. My primary reason for using it was I had a lack of error messages and warnnings
+so used chatGPT to identify parts that were broken. I understand everything that happens.
+-Ethan
+"""
 async def stream_wav(client):
     #ONLY NOW DO WE START THE EFFECTS LOADING THREAD
     thread2.start()
