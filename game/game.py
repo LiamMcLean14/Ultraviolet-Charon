@@ -420,7 +420,7 @@ def draw_hand_state(img, range):
         bar_colour = (50,50,50)
     pygame.draw.rect(screen, bar_colour, (WIDTH // 2 + 50, HEIGHT // 2 + 140, BarWidth, 50))
     pygame.draw.rect(screen, (50,50,50), (WIDTH // 2 + 50, HEIGHT // 2 + 140, slider_width, 50))
-    pygame.draw.rect(screen, (255,255,255), (WIDTH // 2 + 50 + 78, HEIGHT // 2 + 140, 10, 50))
+    pygame.draw.rect(screen, (255,255,255), (WIDTH // 2 + 48 + (BarWidth * ACTIVATE_DIST//120), HEIGHT // 2 + 140, 10, 50))
 
 def correct_lanes(selected_lanes: list[bool], target_lanes: list[int]) -> bool:
     """Determines if the correct lanes are selected to match the target lanes"""
