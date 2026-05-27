@@ -17,7 +17,10 @@ Upload updated file to ESP-32 Camera
 pip install opencv-python\
 pip install cvzone\
 pip install mediapipe==0.10.14\
-pip install pygame
+pip install pygame\
+pip install wave\
+pip install bleak\
+pip install influxdb_client
 
 ### Speaker Setup
 Build and flash to the first XIAO nRF52840 Sense the speaker folder
