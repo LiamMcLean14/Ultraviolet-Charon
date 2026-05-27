@@ -478,8 +478,11 @@ def main():
                 if frames_elapsed >= next_spawn_time:
                     notes.append(NoteObject(next_note, -NOTE_HEIGHT, level.speed))
                     note_index += 1
-
-            # TODO start playing music if not already playing when frames_elapsed = 0
+            
+            # Start playing music if not already playing when frames_elapsed = 0
+            if frames_elapsed == 0:
+                global startMusic
+                startMusic = True
 
         if DEBUGFLAG == False:
             # Events
@@ -510,9 +513,7 @@ def main():
                 # A level has been selected, so load it and start game
              
                 elif fingers == [1,1,1,1,1]:
-                    #print("Loading level") 
-                    global startMusic
-                    startMusic = True
+                    #print("Loading level")
                     level = load_level("levels/" + level_names[selected_level_index])
                     notes.clear()
 
@@ -527,7 +528,7 @@ def main():
                     misses = 0
                     max_combo = 1
                     selected_lanes = [False, False, False, False, False]
-                    spawn_play_offset = (HIT_LINE_Y - NOTE_HEIGHT) / level.speed
+                    spawn_play_offset = (HIT_LINE_Y + NOTE_HEIGHT) / level.speed
                     state = GameState.PLAYING
 
         elif state == GameState.PLAYING:
