@@ -92,18 +92,20 @@ def verifyWav(wav):
 musicStop = False
 songPath = ""
 
-async def stream_wav(client, filename):
+async def stream_wav(client):
     #ONLY NOW DO WE START THE EFFECTS LOADING THREAD
     thread2.start()
     global startMusic
-    print(filename)
+    
     while(True):
-        print("startMusic is ", startMusic)
+        print("startMusic is", startMusic)
         while not startMusic:
             await asyncio.sleep(0.001)
-        print("Started")
+        global songPath
+        fileName = "sounds/" + songPath
         startMusic = False;
-        with wave.open(filename, "rb") as wav:
+        print("The filename being printed is ", fileName)
+        with wave.open(fileName, "rb") as wav:
             if (verifyWav(wav) == -1):
                 return None
 
@@ -219,10 +221,10 @@ async def connect():
         print("Connected!")        
         #sound_name = input("Enter the name of the music file (defaults to sounds/sound.wav if empty): ") 
         #if (sound_name == ""):
-        global songPath
-        print(f"Streaming \"{songPath}\"")
-        filename = "sounds/" + songPath
-        await stream_wav(client, filename)
+        #global songPath
+        #print(f"Streaming \"{songPath}\"")
+        #filename = "sounds/" + songPath
+        await stream_wav(client) #, filename)
 
 
 # -----------------------------
@@ -493,7 +495,7 @@ def main():
             if not rangeQueue.empty():
                 range = rangeQueue.get()
             enter = range < 30
-            print(fingers, enter, previousEnter)
+            #print(fingers, enter, previousEnter)
 
         # Level select controls
         if state == GameState.LEVEL_SELECT:
@@ -513,14 +515,14 @@ def main():
                 # A level has been selected, so load it and start game
              
                 elif fingers == [1,1,1,1,1]:
-                    #print("Loading level")
+                    #print("Loading level") 
                     level = load_level("levels/" + level_names[selected_level_index])
                     notes.clear()
 
                     global songPath
                     songPath = level.song
-
-
+                    print("I am making the global", songPath)
+                    
                     frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
                     score = 0
                     combo = 1
