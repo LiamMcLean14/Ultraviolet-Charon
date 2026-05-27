@@ -16,7 +16,7 @@ Upload updated file to ESP-32 Camera
 ### Dependencies
 pip install opencv-python\
 pip install cvzone\
-pip install mediapipe==0.10.14
+pip install mediapipe==0.10.14\
 pip install pygame
 
 ### Speaker Setup
