@@ -1,4 +1,5 @@
-:wq
+//Based off https://github.com/zephyrproject-rtos/zephyr/blob/main/samples/bluetooth/peripheral_nus/src/main.c
+//REF: The use of a ring buffer was suggested by chatGPT
 /*
  * Copyright (c) 2024 Croxel, Inc.
  *
@@ -84,9 +85,6 @@ void audio_thread(void)
               k_busy_wait(waitPeriod);
             } 
         }
-        /*else {
-            k_sleep(K_USEC(20));
-        }*/
     }
 }
 

@@ -68,6 +68,7 @@ class Level:
     Attributes:
         name: The level's name
         length: The level's length, in seconds
+        song: The wav that should be played in the sounds/ directory
         difficulty: The level's difficulty out of 5. It is not checked, so can be any number.
         audio_notes: A list of Audio notes that will be played via the speaker.
                      If multiple notes have the same time_played, all but 1 will be removed.
@@ -78,17 +79,19 @@ class Level:
     """
     name: str
     description: str
+    song: str
     length: float
     difficulty: float
     speed: int
     audio_notes: list[AudioNote]
     gameplay_notes: list[GameplayNote]
 
-    def __init__(self, name: str, description: str, length: float, difficulty: float, speed: int,
+    def __init__(self, name: str, description: str, song: str, length: float, difficulty: float, speed: int,
                     audio_notes: list[AudioNote], gameplay_notes: list[GameplayNote]) -> None:
         self.name = name
         self.description = description
         
+        self.song = song
         if length < 0:
             raise ValueError(f"Invalid length: {length}. Length must not be < 0")
         self.length = length
@@ -254,6 +257,7 @@ def load_level(path: str) -> Level:
     return Level(
         name=data["name"],
         description=data["description"],
+        song=data["song"],
         length=data["length"],
         difficulty=data["difficulty"],
         speed=data["speed"],

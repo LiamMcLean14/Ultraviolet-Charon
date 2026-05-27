@@ -19,6 +19,22 @@ import numpy as np
 import time
 from bleak import BleakClient, BleakScanner
 
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+import random
+
+url = "http://localhost:8086"
+token = "yjT8eyhxhxvx1hNHMrjI_XydvDVSr_SgtT88slxHxDN8_PlrDVT-7CeepsvrG5upwAGwo8a96iszTNYI8Oez4w=="
+org = "UQ"
+bucket = "InputData"
+
+client = InfluxDBClient(
+    url=url,
+    token=token,
+    org=org
+)
+
+write_api = client.write_api(write_options=SYNCHRONOUS)
 
 DEVICE_NAME = "Zephyr"
 UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -74,11 +90,13 @@ def verifyWav(wav):
     return 0;
   
 musicStop = False
+songPath = ""
 
 async def stream_wav(client, filename):
     #ONLY NOW DO WE START THE EFFECTS LOADING THREAD
     thread2.start()
     global startMusic
+    print(filename)
     while(True):
         print("startMusic is ", startMusic)
         while not startMusic:
@@ -180,7 +198,7 @@ def queueSoundEffect():
             if (playEffect == True):
             #        request = input("Enter a sound effects filePath to play (defaults to sounds/quietquickboom.wav if empty): ")
             #        if (request == ""):
-                request = "sounds/score.wav"
+                request = str.join("sounds/score.wav")
             
                 with wave.open(request, "rb") as wav:
                     if (verifyWav(wav) == 0):
@@ -201,9 +219,10 @@ async def connect():
         print("Connected!")        
         #sound_name = input("Enter the name of the music file (defaults to sounds/sound.wav if empty): ") 
         #if (sound_name == ""):
-        sound_name = "sounds/sound.wav"
-        print(f"Streaming \"{sound_name}\"")
-        await stream_wav(client, sound_name)
+        global songPath
+        print(f"Streaming \"{songPath}\"")
+        filename = "sounds/" + songPath
+        await stream_wav(client, filename)
 
 
 # -----------------------------
@@ -216,7 +235,7 @@ HEIGHT = 800
 FPS = 30
 PRE_LEVEL_SECONDS = 3
 RESULTS_SCREEN_SECONDS = 3
-ACTIVATE_DIST = 30
+ACTIVATE_DIST = 40
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Basic Rhythm Game")
@@ -454,7 +473,7 @@ def main():
         if state == GameState.PLAYING:
             if len(level.gameplay_notes) > note_index:
                 next_note = level.gameplay_notes[note_index]
-                next_play_time = next_note.time_played * FPS * 3
+                next_play_time = next_note.time_played * FPS
                 next_spawn_time = next_play_time - spawn_play_offset
                 if frames_elapsed >= next_spawn_time:
                     notes.append(NoteObject(next_note, -NOTE_HEIGHT, level.speed))
@@ -495,8 +514,11 @@ def main():
                     global startMusic
                     startMusic = True
                     level = load_level("levels/" + level_names[selected_level_index])
-
                     notes.clear()
+
+                    global songPath
+                    songPath = level.song
+
 
                     frames_elapsed = FPS * PRE_LEVEL_SECONDS * -1
                     score = 0
@@ -555,6 +577,12 @@ def main():
             if frames_elapsed >= level.length * FPS and not notes:
                 state = GameState.RESULTS
                 frames_elapsed = 0
+                point = (Point("Highscores")
+                         .tag("Level", level_names[selected_level_index])
+                         .field("Score", float(score))
+                )
+                write_api.write(bucket=bucket, org=org, record=point)
+
 
         elif state == GameState.RESULTS:
             if frames_elapsed >= FPS * RESULTS_SCREEN_SECONDS:

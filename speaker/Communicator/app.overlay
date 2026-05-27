@@ -1,3 +1,5 @@
+//https://github.com/zephyrproject-rtos/zephyr/blob/main/samples/boards/bbc/microbit/sound/boards/bbc_microbit.overlay
+//REF: This was modified by chatGPT when I got desperate for this to work.
 / {
     pwm_beeper: pwm_beeper {
         compatible = "pwm-leds";
@@ -8,12 +10,15 @@
     };
 };
 
+
 &pwm0 {
     status = "okay";
     pinctrl-0 = <&pwm0_default>;
     pinctrl-1 = <&pwm0_sleep>;
     pinctrl-names = "default", "sleep";
 };
+
+//https://github.com/zephyrproject-rtos/zephyr/blob/main/boards/nordic/nrf52840dk/nrf52840dk_nrf52840-pinctrl.dtsi Line 84 ->
 
 &pinctrl {
     pwm0_default: pwm0_default {

@@ -1,6 +1,7 @@
 {
     "name": "Wii shop",
     "description": "I don't know if the hardware can keep up with this",
+    "song" : "wiishop.wav",
     "length": 32.5,
     "difficulty": 5,
     "speed": 6,
